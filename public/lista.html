@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Listado y explorador de archivos almacenados en AWS S3 local">
+  <title>Lista de Archivos - AWS S3</title>
+  
+  <!-- Tipografía Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Hoja de Estilos Separada -->
+  <link rel="stylesheet" href="/css/lista.css">
+  
+  <!-- Script Modular Separado -->
+  <script src="/js/lista.js" defer></script>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Encabezado -->
+    <header>
+      <div class="brand-section">
+        <div class="s3-icon-badge" title="Amazon S3 Storage">
+          <!-- Icono AWS S3 Bucket -->
+          <svg viewBox="0 0 24 24">
+            <path d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 2v3H5V6h14zm-14 5h14v7H5v-7z"/>
+            <path d="M7 13h4v3H7z"/>
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1>
+            Archivos en AWS S3
+            <span class="endpoint-pill" title="Endpoint consumido">GET /api/archivos</span>
+          </h1>
+          <p>Explorador interactivo de objetos sincronizados con el bucket S3</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnRecargar" class="btn btn-secondary" title="Sincronizar y recargar la lista de archivos">
+          <svg id="iconoRecarga" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+          Recargar
+        </button>
+        <a href="/" class="btn btn-primary" title="Ir al formulario para subir nuevos archivos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+          </svg>
+          Subir Archivo
+        </a>
+      </div>
+    </header>
+
+    <!-- Tarjetas de Información / Métricas -->
+    <section class="stats-grid">
+      <div class="stat-card accent-orange">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V8h14v10z"/>
+          </svg>
+          Bucket S3
+        </div>
+        <div id="statBucket" class="stat-value">...</div>
+        <div class="stat-sub">Contenedor destino</div>
+      </div>
+
+      <div class="stat-card accent-blue">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+          </svg>
+          Prefijo / Carpeta
+        </div>
+        <div id="statPrefijo" class="stat-value" style="font-size: 1.15rem; font-family: 'JetBrains Mono', monospace;">...</div>
+        <div class="stat-sub">Ruta de almacenamiento</div>
+      </div>
+
+      <div class="stat-card accent-green">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+          </svg>
+          Total Archivos
+        </div>
+        <div id="statTotal" class="stat-value">0</div>
+        <div class="stat-sub">Objetos en el bucket</div>
+      </div>
+
+      <div class="stat-card accent-purple">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+          </svg>
+          Espacio Total
+        </div>
+        <div id="statTamano" class="stat-value">0 B</div>
+        <div class="stat-sub">Tamaño acumulado</div>
+      </div>
+    </section>
+
+    <!-- Barra de Búsqueda y Filtro -->
+    <section class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" id="inputBuscar" class="search-input" placeholder="Buscar por nombre o ruta de archivo..." autocomplete="off">
+      </div>
+
+      <div class="toolbar-actions">
+        <span id="contadorFiltro" class="file-counter-pill">Cargando archivos...</span>
+      </div>
+    </section>
+
+    <!-- Contenedor Principal de la Tabla / Estados -->
+    <main class="table-container">
+      
+      <!-- Estado de Carga -->
+      <div id="estadoCargando" class="state-card">
+        <div class="spinner"></div>
+        <h2 class="state-title">Consultando AWS S3</h2>
+        <p class="state-desc">Obteniendo la lista de objetos desde el endpoint <code>/api/archivos</code>...</p>
+      </div>
+
+      <!-- Estado de Error -->
+      <div id="estadoError" class="state-card" style="display: none;">
+        <div class="state-icon error">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+        </div>
+        <h2 class="state-title">No se pudieron cargar los archivos</h2>
+        <p id="mensajeError" class="state-desc">Hubo un problema al contactar con la API o el bucket S3 local.</p>
+        <button id="btnReintentar" class="btn btn-secondary">
+          Reintentar conexión
+        </button>
+      </div>
+
+      <!-- Estado Vacío -->
+      <div id="estadoVacio" class="state-card" style="display: none;">
+        <div class="state-icon empty">
+          <svg viewBox="0 0 24 24">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+          </svg>
+        </div>
+        <h2 class="state-title">No hay archivos en el bucket</h2>
+        <p class="state-desc">Aún no se han subido archivos a este prefijo o la búsqueda no arrojó resultados.</p>
+        <a href="/" class="btn btn-primary">Subir primer archivo</a>
+      </div>
+
+      <!-- Tabla de Archivos -->
+      <div id="tablaWrapper" style="display: none; width: 100%; overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 28%;">Nombre del Archivo</th>
+              <th style="width: 25%;">S3 Key (Ruta)</th>
+              <th style="width: 12%;">Tamaño</th>
+              <th style="width: 17%;">Última Modificación</th>
+              <th style="width: 18%; text-align: center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoTabla">
+            <!-- Las filas se insertarán dinámicamente mediante JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+
+    <!-- Notificación Toast -->
+    <div id="toast" class="toast">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#38bdf8">
+        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+      </svg>
+      <span id="toastMensaje">Key copiada al portapapeles</span>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div id="modalEliminar" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-icon-danger">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+        </div>
+        <h3 class="modal-title">¿Eliminar archivo de S3?</h3>
+        <p class="modal-text">Estás a punto de eliminar el siguiente objeto de tu bucket:</p>
+        <div id="modalNombreArchivo" class="modal-file-badge">nombre_archivo.ext</div>
+        <p class="modal-subtext">Esta acción es permanente y no se podrá deshacer.</p>
+        <div class="modal-actions">
+          <button id="btnCancelarEliminar" type="button" class="btn btn-secondary">Cancelar</button>
+          <button id="btnConfirmarEliminar" type="button" class="btn btn-danger">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+            Sí, Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer>
+      <p>Node.js &bull; Express &bull; AWS SDK v3 &bull; Amazon Simple Storage Service (S3)</p>
+    </footer>
+  </div>
+
+</body>
+</html>
